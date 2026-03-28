@@ -1,24 +1,28 @@
 import pytest
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from pages.login_page import LoginPage
 
 @pytest.fixture
 def setup():
-    driver = webdriver.Chrome()
-    driver.maximize_window()
+    options = Options()
+    options.add_argument("--headless") # Required for Jenkins/Linux
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(options=options)
+    driver.implicitly_wait(10)
     yield driver
     driver.quit()
 
-def test_login_valid(setup):
+def test_orange_hrm_login(setup):
     driver = setup
-
-    # REAL URL
-    driver.get("https://www.saucedemo.com/")
+    # REAL URL for training
+    driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/auth/login")
 
     login = LoginPage(driver)
-    login.enter_username("standard_user")
-    login.enter_password("secret_sauce")
+    login.enter_credentials("Admin", "admin123")
     login.click_login()
 
-    # REAL validation
-    assert "Swag Labs" in driver.title
+    # Verify we reached the Dashboard
+    assert "dashboard" in driver.current_url.lower()
+    print("Login Successful!")
